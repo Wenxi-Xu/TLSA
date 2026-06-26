@@ -38,8 +38,6 @@ export LLM_API_KEY=""
 
 ## How to run
 
-BANKING dataset as an example:
-
 ```bash
 sh scripts/run_banking_0.5.sh
 sh scripts/run_clinc_0.5.sh
