@@ -1,6 +1,6 @@
 # TLSA: LLM-Guided Text-Label Space Alignment with Contrastive Learning for Generalized Category Discovery
 
-This is the implementation of our ACL 2026 paper TLSA.
+This is the implementation of our ACL 2026 paper TLSA. 
 
 ## Requirements
 
