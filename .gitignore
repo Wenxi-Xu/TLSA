@@ -43,8 +43,12 @@ pretrained_models/*
 .ipynb_checkpoints/
 *.ipynb
 
+# Private / local scripts (may contain API keys)
+*_private.sh
+
 # Plots / temp
 *.png
 *.jpg
 *.pdf
 !Paper.pdf
+run_banking_0.5_private.sh

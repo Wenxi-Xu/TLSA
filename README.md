@@ -10,7 +10,7 @@ After creating a virtual environment, run
 pip install -r requirements.txt
 ```
 
-## Pretrain
+## Pretrain Model
 
 Download the pretrained checkpoints and put them into a folder named `pretrained_models` in the root directory.
 

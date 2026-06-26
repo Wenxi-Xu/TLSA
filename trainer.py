@@ -44,16 +44,14 @@ class TLSATrainer:
 
         # sub-directories
         self.models_dir = os.path.join(self.base_save_dir, "models")
-        self.visualizations_dir = os.path.join(self.base_save_dir, "visualizations")
 
         # ensure directories exist
-        for directory in [self.base_save_dir, self.models_dir, self.visualizations_dir]:
+        for directory in [self.base_save_dir, self.models_dir]:
             os.makedirs(directory, exist_ok=True)
 
         logger.info("Save directories created:")
         logger.info(f"   Base: {self.base_save_dir}")
         logger.info(f"   Models: {self.models_dir}")
-        logger.info(f"   Visualizations: {self.visualizations_dir}")
 
     def train(self):
         """Full training pipeline."""
@@ -75,7 +73,7 @@ class TLSATrainer:
 
         # Final test evaluation (use current model)
         self.current_epoch = "Final"
-        final_results = self.evaluate_results(self.data_manager.test_dataloader, enable_visualization=True)
+        final_results = self.evaluate_results(self.data_manager.test_dataloader)
 
         # Save summary then final model
         training_time = time.time() - _train_start
@@ -681,7 +679,8 @@ class TLSATrainer:
             try:
                 logger.info(f"[DEBUG] Cluster {cluster_id} -> label: {generated_label}, high_n={len(high_conf_texts)}")
                 for pt in sample_texts[:3]:
-                    logger.info(f"[DEBUG]  sample: {pt[:120].replace('\n',' ')}")
+                    _pt = pt[:120].replace('\n', ' ')
+                    logger.info(f"[DEBUG]  sample: {_pt}")
             except Exception:
                 pass
 
@@ -1268,7 +1267,8 @@ class TLSATrainer:
             try:
                 logger.info(f"{header} -> label: {target_label}, bucket_sampling: high_s={len(picked_high)}, mid_s={len(picked_mid)}, low_s={len(picked_low)}, selected_k={len(filtered_texts_local)}")
                 for pt in candidate_texts[:2]:
-                    logger.info(f"[DEBUG]  sample: {pt[:120].replace('\n',' ')}")
+                    _pt = pt[:120].replace('\n', ' ')
+                    logger.info(f"[DEBUG]  sample: {_pt}")
             except Exception:
                 pass
 
@@ -1442,7 +1442,7 @@ class TLSATrainer:
             weight_decay=self.args.weight_decay
         )
 
-    def evaluate_results(self, dataloader, enable_visualization: bool = False):
+    def evaluate_results(self, dataloader):
         """Evaluate clustering metrics on provided dataloader."""
         logger.info("Performing evaluation on provided dataloader...")
         features, true_labels = extract_features_and_labels(
@@ -1464,9 +1464,6 @@ class TLSATrainer:
         logger.info("Eval Results:")
         for metric, value in final_results.items():
             logger.info(f"  {metric}: {value}")
-
-        if enable_visualization:
-            self._visualize_clustering_results(features, cluster_labels)
 
         return final_results
 
@@ -1514,36 +1511,6 @@ class TLSATrainer:
         logger.info(f"Dev Known k-acc: {result['k-acc']}")
         return result
 
-    def _visualize_clustering_results(self,
-                                    features: np.ndarray,
-                                    cluster_labels: np.ndarray):
-        """Visualize clustering (TSNE only)."""
-        try:
-            from visualization import visualize_kmeans_tsne
-
-            logger.info("Generating TSNE clustering visualization...")
-
-            # generate filename
-            current_epoch = getattr(self, 'current_epoch', 'final')
-            if current_epoch == "Final":
-                filename_tsne = "final_clustering_results_TSNE.png"
-            else:
-                filename_tsne = f"epoch_{current_epoch:03d}_clustering_results_TSNE.png"
-
-            # generate TSNE
-            visualize_kmeans_tsne(
-                features, cluster_labels,
-                save_path=os.path.join(self.visualizations_dir, filename_tsne),
-                pca_dim=50, perplexity=40, n_iter=2000, normalize_features=True
-            )
-
-            logger.info(f"TSNE visualization saved to {os.path.join(self.visualizations_dir, filename_tsne)}")
-
-        except ImportError as e:
-            logger.warning(f"Visualization module not available: {e}")
-        except Exception as e:
-            logger.error(f"Error generating visualization: {e}")
-
     def _print_training_summary(self):
         """Print training summary with saved files."""
         logger.info("=" * 80)
@@ -1566,18 +1533,6 @@ class TLSATrainer:
             logger.info(f"   Final Model: {final_model}")
         else:
             logger.info("   Final Model: Not found")
-
-        # check visualization files
-        viz_files = []
-        if os.path.exists(self.visualizations_dir):
-            viz_files = [f for f in os.listdir(self.visualizations_dir) if f.endswith('.png')]
-
-        if viz_files:
-            logger.info(f"   Visualizations ({len(viz_files)} files):")
-            for viz_file in sorted(viz_files):
-                logger.info(f"      - {os.path.join(self.visualizations_dir, viz_file)}")
-        else:
-            logger.info("   Visualizations: None generated")
 
         logger.info("=" * 80)
 
@@ -1629,7 +1584,6 @@ class TLSATrainer:
                 "final_model": self._get_final_model_path(),
                 "base_directory": self.base_save_dir,
                 "models_directory": self.models_dir,
-                "visualizations_directory": self.visualizations_dir,
             }
         }
 
